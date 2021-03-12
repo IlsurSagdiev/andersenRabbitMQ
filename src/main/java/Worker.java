@@ -6,8 +6,13 @@ import com.rabbitmq.client.DeliverCallback;
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
+public class Worker {
 
-public class Receiving {
+    public static void doWork(String task) throws InterruptedException {
+        for (char ch : task.toCharArray()) {
+            if (ch == '.') Thread.sleep(1000);
+        }
+    }
 
     private final static String QUEUE_NAME = "hello";
 
@@ -22,10 +27,21 @@ public class Receiving {
         System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
 
         DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-            String message = new String(delivery.getBody(),"UTF-8");
+            String message = new String(delivery.getBody(), "UTF-8");
             System.out.println(" [x] Received '" + message + "'");
+
+            try {
+                doWork(message);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } finally {
+                System.out.println(" [x] Done");
+            }
         };
-        channel.basicConsume(QUEUE_NAME,true,deliverCallback, consumerTag ->{});
+
+        boolean autoAck = true;
+        channel.basicConsume(QUEUE_NAME, autoAck, deliverCallback, consumerTag -> {
+        });
 
     }
 }
